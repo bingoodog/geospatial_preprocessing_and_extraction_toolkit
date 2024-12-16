@@ -23,7 +23,7 @@ The preprocessing scripts include general functions for preparing raw geospatial
 - **Mosaic Creation**: Merge downloaded raster tiles into a single continuous layer.
 
 ### **Extraction Vignette**
-Here is [vignette](geospatial_extraction.md) for extracting geospatial data using established libraries like `terra` and `sf`. The vignette guides users through:
+Here is a [vignette](geospatial_extraction.md) for extracting geospatial data using established libraries like `terra` and `sf`. The vignette guides users through:
 - Extracting raster values to point locations.
 - Summarizing raster data within polygons.
 - Getting raster summary statistics.
