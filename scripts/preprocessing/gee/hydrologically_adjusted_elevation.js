@@ -1,6 +1,6 @@
 /*
  * ---
- * title: Hydrologically Adjusted Elevations Export
+ * title: Hydrologically Adjusted Elevations
  * author: Brendan Casey
  * created: 2024-12-13
  * inputs: Area of Interest (AOI), MERIT Hydro Dataset
@@ -20,7 +20,7 @@
 // 1.1 Import Image
 var meritHydro = ee.Image("MERIT/Hydro/v1_0_1");
 
-// 1.2 Define Constants and Area of Interest (AOI)
+// 1.2 Define Area of Interest (AOI)
 
 /* Define area of interest (AOI) */
 var aoi = ee.FeatureCollection('FAO/GAUL_SIMPLIFIED_500m/2015/level1')
