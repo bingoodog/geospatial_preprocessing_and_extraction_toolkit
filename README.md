@@ -35,7 +35,7 @@ Here is a [vignette](geospatial_extraction.md) for extracting geospatial data us
 | File | Description |
 |------|-------------|
 | **Google Earth Engine** | |
-| [functions](https://github.com/bgcasey/geospatial_preprocessing_and_extraction_toolkit/tree/main/scripts/preprocessing/gee/functions) | Edited how NDRS is calculated (i.e. how the min/max of DRS pixels is determined). |
+| [functions](https://github.com/bgcasey/geospatial_preprocessing_and_extraction_toolkit/tree/main/scripts/preprocessing/gee/functions) | Various utility functions. |
 | [.gee_git_clone.sh](https://github.com/bgcasey/geospatial_preprocessing_and_extraction_toolkit/blob/main/scripts/preprocessing/gee/.gee_git_clone.sh) | Script to clone a GEE repository to a local directory. |
 | [global_geomorphometric_layers.js](https://github.com/bgcasey/geospatial_preprocessing_and_extraction_toolkit/blob/main/scripts/preprocessing/gee/global_geomorphometric_layers.js) | Loads geomorphometric layers from the Geomorpho90m dataset, mosaics them, clips them to a specified area of interest (AOI), and combines them into a single multiband image.|
 | [hydrologically_adjusted_elevation.js](https://github.com/bgcasey/geospatial_preprocessing_and_extraction_toolkit/blob/main/scripts/preprocessing/gee/hydrologically_adjusted_elevation.js) | Extracts the hydrologically adjusted elevations (Height Above Nearest Drainage - HAND) from the MERIT Hydro dataset. |
