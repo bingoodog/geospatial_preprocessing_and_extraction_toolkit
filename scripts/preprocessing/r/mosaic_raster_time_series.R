@@ -17,6 +17,7 @@
 
 ## 1.1 Load required packages and functions ----
 library(terra)
+library(parallel)
 source("scripts/preprocessing/r/mosaic_rasters.R")
 
 ## 1.2 Define input and output directories ----
@@ -30,9 +31,19 @@ if (!dir.exists(output_directory)) {
 }
 
 # Define output file prefix
-output_file_prefix <- "sentinel2_mosaic_"
+output_file_prefix <- "sentinel2_summer_mean_"
 
-#
+## 1.3 Set up parallel processing ----
+# Detect the number of available CPU cores.
+num_cores <- 16 # Reserve one core for system processes.
+
+# Create a cluster using the available cores.
+cl <- makeCluster(num_cores)
+
+# Load required libraries on each worker
+clusterEvalQ(cl, {
+  library(terra)  # Load terra package
+})
 
 # 2. Process and mosaic rasters ----
 # This section processes raster files by year, grouping 
@@ -52,10 +63,17 @@ years <- unique(
   sub(".*_(\\d{4})-.*", "\\1", basename(raster_files))
 )
 
-## 2.3 Loop through years and create mosaics ----
-for (year in years) {
-  
-  ### 2.3.1 Filter raster files for the current year ----
+## 2.3 Export necessary variables and functions to the cluster ----
+clusterExport(cl, c("raster_files", 
+                    "output_directory", 
+                    "output_file_prefix",
+                    "mosaic_rasters_in_list"))
+
+## 2.4 Parallel loop to mosaic rasters ----
+# Define a function for mosaicking by year to be run in parallel.
+mosaic_by_year <- function(year) {
+ 
+  ### 2.4.1 Filter raster files for the current year ----
   year_files <- raster_files[grepl(
     paste0("_", year, "-"),
     basename(raster_files)
@@ -63,16 +81,16 @@ for (year in years) {
   
   # Skip processing if no files are found for the year.
   if (length(year_files) == 0) {
-    next
+    return(NULL)
   }
   
-  ### 2.3.2 Define output filename for the mosaic ----
+  ### 2.4.2 Define output filename for the mosaic ----
   export_filename <- file.path(
     output_directory,
     paste0(output_file_prefix, year, ".tif")
   )
   
-  ### 2.3.3 Mosaic raster files ----
+  ### 2.4.3 Mosaic raster files ----
   # Call the mosaic function to create the raster mosaic.
   mosaic <- mosaic_rasters_in_list(
     raster_files = year_files,
@@ -80,9 +98,15 @@ for (year in years) {
     fun = "mean"
   )
   
-  ### 2.3.4 Print progress ----
-  # Log the progress of the mosaicking process.
-  cat("Mosaic for year", year, "saved to:", export_filename, "\n")
+  ### 2.4.4 Return progress message ----
+  return(paste("Mosaic for year", year, "saved to:", export_filename))
 }
 
+# Use parallel processing to apply the function to each year.
+parLapply(cl, years, mosaic_by_year)
+
+# Stop the cluster
+stopCluster(cl)
+
 # End of script ----
+
