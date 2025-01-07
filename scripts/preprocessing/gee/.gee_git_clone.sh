@@ -41,7 +41,7 @@ clone_gee_project() {
   # same name exists in the destination, it is replaced without 
   # prompting.
   if [ "$move_files" = true ]; then
-    mv -vf "$project"/*.js .
+    mv -vf "$project"/* .
   fi
 
   # If the third argument is true, delete the cloned project 
