@@ -96,9 +96,6 @@ The `landsatTimeSeries.ls_fn` function processes Landsat images and calculates v
 - `selectedIndices`: An array of indices to calculate (e.g., ['NDVI', 'BSI']).
     
 - `statistic`: The statistical method to apply for summarizing data ('mean', 'median', 'max').
-    
-
-The function harmonizes Landsat 5, 7, 8, and 9 imagery, applies cloud and snow masks, calculates selected indices, and outputs a combined image collection summarized by the specified statistic for each time interval.
 
 **Available Spectral Indices:**
 
@@ -116,6 +113,10 @@ The function harmonizes Landsat 5, 7, 8, and 9 imagery, applies cloud and snow m
 - `NDWI`: Normalized Difference Water Index
 - `SAVI`: Soil Adjusted Vegetation Index
 - `SI`: Shadow Index
+  
+The function harmonizes Landsat 5, 7, 8, and 9 imagery, applies cloud and snow masks, calculates selected indices, and outputs a combined image collection summarized by the specified statistic for each time interval.
+
+For each **start date** in the `dateList`, the function calculates an **end date** by advancing the start date by the specified `interval` and `intervalType`. For example, if the start date is `'2019-06-01'` and the interval is `121` days, the end date will be `'2019-09-30'`. The function then retrieves all Landsat images (from Landsat 5, 7, 8, and 9) within each start-end date range, applies cloud and snow masking, and calculates the selected spectral indices. Each interval is processed independently, producing a **composite image** summarized using the specified `statistic` (e.g., 'mean' or 'median') for the selected indices and raw bands. The result is an image collection where each image represents one processed time interval.
   
 ```javascript
 var ls = landsatTimeSeries.ls_fn(
@@ -233,4 +234,186 @@ utils.exportImageCollection(ls, aoi, folder, scale, crs, fileNameFn);
 ```
 
 ---
+
+# Sentinel-2 Time Series
+
+Below is a simple, step-by-step guide to processing Sentinel-2 satellite imagery using Google Earth Engine (GEE) and the sentinel_time_series.js script found in https://code.earthengine.google.com/?accept_repo=users/bgcasey/science_centre. The following code snippets are designed to be copied into the GEE code editor for streamlined analysis.
+
+### 1. Setup
+
+#### Load Helper Functions
+
+Load helper functions to simplify tasks like date generation, image processing, and exporting results.
+
+- `functions/utils`: Provides utility functions for satellite imagery and geospatial analyses:
+    
+    - **`createDateList`**: Generates a list of dates for time series analysis based on a specified start date, end date, interval, and unit.
+    - **`exportImageCollection`**: Exports an image collection to Google Drive, supporting custom file naming and export parameters.
+    
+- `functions/sentinelTimeSeries`: Processes Sentinel-2 imagery by calculating vegetation indices and merging results into a single image collection for a specified period and AOI.
+    
+    - **Steps performed by the script:**
+        
+        1. Retrieves the Sentinel-2 collection for the specified date range and AOI.
+            
+        2. Applies cloud masking to the images.
+            
+        3. Calculates the selected indices for each image in the collection.
+            
+        4. Merges the results into a single image collection, providing the median composite for each date range.
+        
+- `functions/sentinelIndicesAndMasks`: Defines functions to calculate spectral indices and apply masks to Sentinel-2 images. Masks are used for cloud, snow, and QA filtering.
+    
+
+```javascript
+var utils = require("users/bgcasey/science_centre:functions/utils");
+var sentinelTimeSeries = require("users/bgcasey/science_centre:functions/sentinel_time_series");
+var sentinelIndicesAndMasks = require("users/bgcasey/science_centre:functions/sentinel_indices_and_masks");
+```
+
+#### Define Area of Interest (AOI)
+
+This section sets the geographic area for analysis. The time series of Landsat images will be extracted for this region. The following code defines and area of interest around Calling Lake, Alberta, Canada.
+
+```javascript
+var aoi = ee.Geometry.Polygon([
+  [-113.5, 55.5],  // Top-left corner
+  [-113.5, 55.0],  // Bottom-left corner
+  [-112.8, 55.0],  // Bottom-right corner
+  [-112.8, 55.5]   // Top-right corner
+]);
+```
+
+#### Create Date List for Time Series
+
+Generate a list of start dates for the time intervals used in the time series analysis.
+
+```javascript
+var dateList = utils.createDateList(
+  ee.Date('2019-06-01'), ee.Date('2020-06-01'), 1, 'years'
+);
+print("Start Dates", dateList);
+```
+
+#### Define Reducer Statistic
+
+Specify the statistic to summarize pixel values over each time interval.
+
+```javascript
+var statistic = 'mean';
+```
+
+### 2. Sentinel-2 Time Series Processing
+
+Calculate selected spectral indices for each time interval using the `sentinelTimeSeries.s2_fn` function. The `sentinelTimeSeries.s2_fn` function processes Sentinel-2 imagery over a series of time intervals, calculating selected vegetation indices for each period and merging the results into a single image collection.
+
+**Function Arguments:**
+
+- **`dates`** (`Array`): A list of start dates for the time intervals in the time series. Each date marks the beginning of a time window over which Sentinel-2 imagery is processed.
+    
+- **`interval`** (`number`): The number of units to advance from each start date to define the end of the time interval. For example, if `interval = 121` and `intervalType = 'days'`, each interval will span 121 days.
+    
+- **`intervalType`** (`string`): The type of time unit for the interval (e.g., `'days'`, `'weeks'`, `'months'`, `'years'`). This determines how the interval is calculated from the start date.
+    
+- **`aoi`** (`ee.Geometry`): The area of interest for which imagery will be processed and clipped.
+    
+- **`selectedIndices`** (`Array`): A list of spectral indices to calculate for each image (e.g., `['NDVI', 'EVI']`).
+  
+  **Available Spectral Indices:**
+
+- `CRE`: Chlorophyll Red Edge Index
+- `DRS`: Distance Red & SWIR
+- `DSWI`: Disease Stress Water Index
+- `EVI`: Enhanced Vegetation Index
+- `GNDVI`: Green Normalized Difference Vegetation Index
+- `LAI`: Leaf Area Index
+- `NBR`: Normalized Burn Ratio
+- `NDRE1`, `NDRE2`, `NDRE3`: Normalized Difference Red-Edge Indices
+- `NDVI`: Normalized Difference Vegetation Index
+- `NDWI`: Normalized Difference Water Index
+- `RDI`: Ratio Drought Index
+
+For each **start date** in the `dateList`, the function calculates an **end date** by advancing the start date by the specified `interval` and `intervalType`. For example, if the start date is `'2019-06-01'` and the interval is `121` days, the end date will be `'2019-09-30'`. The function then retrieves all Sentinel-2 images within each start-end date range, applies cloud masking, and calculates the selected indices. Each interval is processed independently, producing a **median composite** of the selected indices and raw bands for that specific period. The final result is an image collection where each image represents one processed time interval.
+
+```javascript
+var s2 = sentinelTimeSeries.s2_fn(
+  dateList, 121, 'days', aoi,
+  ['CRE', 'DRS', 'DSWI', 'EVI', 'GNDVI', 'LAI', 'NBR',
+   'NDRE1', 'NDRE2', 'NDRE3', 'NDVI', 'NDWI', 'RDI']
+)
+.map(function(image) {
+  return image.toFloat();
+});
+```
+
+### 3. Check Calculated Bands
+
+#### 3.1 Check Band Summary Statistics
+
+```javascript
+var image_first = s2.first();
+var stats_first = image_first.reduceRegion({
+  reducer: ee.Reducer.min()
+    .combine(ee.Reducer.max(), '', true)
+    .combine(ee.Reducer.stdDev(), '', true),
+  geometry: aoi,
+  scale: 1000,
+  bestEffort: true,
+  maxPixels: 1e13
+});
+print('Summary Statistics for First Image:', stats_first);
+```
+
+#### 3.2 Check Band Data Types
+
+```javascript
+print("Band Names", image_first.bandNames());
+print("Band Types", image_first.bandTypes());
+```
+
+#### 3.3 Visualize NDVI
+
+```javascript
+var ndviVisParams = {
+  min: -0.1,
+  max: 1.0,
+  palette: ['blue', 'white', 'green']
+};
+
+var ndvi_first = image_first.select('NDVI');
+var ndvi_firstLowRes = ndvi_first.reproject({
+  crs: ndvi_first.projection(),
+  scale: 100
+});
+
+Map.centerObject(aoi, 9);
+Map.addLayer(ndvi_firstLowRes, ndviVisParams, 'NDVI (Low Res)');
+```
+
+### 4. Export Sentinel-2 Time Series to Google Drive
+
+Use the `exportImageCollection` function to export each image in the ImageCollection to Google Drive.
+
+**Function Arguments:**
+
+- `collection`: The image collection to export.
+- `aoi`: The area of interest for clipping images.
+- `folder`: The target folder in Google Drive.
+- `scale`: The spatial resolution in meters.
+- `crs`: The coordinate reference system for export.
+- `fileNameFn`: Function to define custom file names based on im
+
+```javascript
+var folder = 'gee_exports';
+var scale = 10;
+var crs = 'EPSG:4326';
+
+var fileNameFn = function(img) {
+  var year = img.get('year').getInfo() || 'unknown';
+  return 'sentinel2_multiband_' + year;
+};
+
+utils.exportImageCollection(s2, aoi, folder, scale, crs, fileNameFn);
+```
+
 
