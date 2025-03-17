@@ -43,6 +43,55 @@ This vignette describes how to setup GEE and load and run the ABMI Science Centr
 
 ---
 
+# Accessing Google Earth Engine JavaScript Files
+
+JavaScript files for processing Landsat, Sentinel-2, and MODIS imagery can be accessed and used directly in the Google Earth Engine (GEE) Code Editor. The scripts are read-only but can be referenced or copied into your own GEE repositories for modification.
+
+### Adding Scripts to the GEE Code Editor
+
+To use the provided scripts, visit the following link:
+
+- [https://code.earthengine.google.com/?accept_repo=users/bgcasey/science_centre](https://code.earthengine.google.com/?accept_repo=users/bgcasey/science_centre)
+
+This will automatically add the repository to your GEE Code Editor under the **Reader** section of the **Scripts** tab. The repository contains:
+
+- `functions/`: Contains helper functions used across multiple scripts for tasks like exporting image collections, calculating indices, and processing images.
+- `landsat_time_series.js`: Main script for processing Landsat imagery.
+- `sentinel_time_series.js`: Main script for processing Sentinel-2 imagery.
+- `modis_time_series.js`: Main script for processing MODIS land cover dynamics.
+
+### Editing Scripts
+
+The provided scripts are **read-only**. To modify them:
+
+1. **Copy the Script**: Open the desired script in the GEE Code Editor, select all the code, and copy it.
+2. **Create a New Script**: In your GEE Code Editor, click the **Scripts** tab, select **New**, and choose **File**.
+3. **Paste the Code**: Paste the copied code into the new script file.
+4. **Save to Your Repo**: Save the new script to your own repository for editing and execution.
+
+### Understanding Script Dependencies
+
+The main scripts (e.g., `landsat_time_series.js` and `sentinel_time_series.js`) depend on helper functions located in the `functions/` folder. These helper functions are imported at the beginning of each main script. For example:
+
+```javascript
+var utils = require("users/bgcasey/science_centre:functions/utils");
+var landsatTimeSeries = require("users/bgcasey/science_centre:functions/landsat_time_series");
+var landsatIndicesAndMasks = require("users/bgcasey/science_centre:functions/landsat_indices_and_masks");
+```
+
+- **`utils`**: Provides utility functions such as `createDateList` for generating date intervals and `exportImageCollection` for exporting images to Google Drive.
+- **`landsatTimeSeries`** and **`sentinelTimeSeries`**: Contain the main functions to process Landsat and Sentinel-2 imagery, respectively.
+- **`landsatIndicesAndMasks`** and **`sentinelIndicesAndMasks`**: Provide functions to calculate various spectral indices and apply masking for cloud, snow, and other quality filters.
+
+The helper functions all contain descriptions and example code.
+
+### Best Practices for Script Management
+- **Keep Helper Functions Modular**: When copying scripts into your repository, maintain the folder structure and keep helper functions separate for better organization and easier debugging.
+- **Test in Small AOIs First**: If modifying processing parameters or functions, run the scripts on smaller areas of interest (AOIs) to minimize processing time and avoid timeouts.
+
+---
+
+
 # Landsat Time Series
 Below is a simple, step-by-step guide to processing Landsat satellite imagery using Google Earth Engine (GEE) and the landsat_time_series.js script found in [https://code.earthengine.google.com/?accept_repo=users/bgcasey/science_centre](https://code.earthengine.google.com/?accept_repo=users/bgcasey/science_centre). The following code snippets are meant to be copied into the GEE code editor.
 
@@ -604,4 +653,8 @@ var fileNameFn = function(img) {
 ```js
 utils.exportImageCollection(dataset, aoi, folder, scale, crs, fileNameFn);
 ```
+
+---
+
+[^1]: The Google Earth Engine JavaScript files can be added directly to your Google Earth Engine Code Editor using [https://code.earthengine.google.com/?accept_repo=users/bgcasey/science_centre](https://code.earthengine.google.com/?accept_repo=users/bgcasey/science_centre).
 
