@@ -4,7 +4,6 @@ This vignette describes...
 # Landsat Time Series
 Below is a simple, step-by-step guide to processing Landsat satellite imagery using Google Earth Engine (GEE) and the landsat_time_series.js script found in [https://code.earthengine.google.com/?accept_repo=users/bgcasey/science_centre](https://code.earthengine.google.com/?accept_repo=users/bgcasey/science_centre). The following code snippets are meant to be copied into the GEE code editor.
 
-# Landsat Time Series
 ## 1. Setup
 
 ### Load Helper Functions
@@ -415,5 +414,152 @@ var fileNameFn = function(img) {
 
 utils.exportImageCollection(s2, aoi, folder, scale, crs, fileNameFn);
 ```
+---
 
+# MODIS Annual Land Cover Dynamics (2001-2023)
+
+## 1. Setup
+
+This section prepares the environment, defines the Area of Interest (AOI), and loads the necessary helper functions.
+
+### Load Helper Functions
+
+Import the utility functions to assist with tasks such as exporting image collections.
+
+```js
+var utils = require("users/bgcasey/science_centre:functions/utils");
+```
+
+### Define Area of Interest (AOI)
+
+Specify the geographic region for analysis. 
+
+```js
+var aoi = ee.Geometry.Polygon([
+  [-113.5, 55.5],  
+  [-113.5, 55.0],  
+  [-112.8, 55.0],  
+  [-112.8, 55.5]   
+]);
+```
+
+## 2. Load MODIS MCD12Q2 Dataset
+   
+This section demonstrates how to load and preprocess the MODIS MCD12Q2 dataset for the period 2021–2023.
+
+#### Load and Clip Dataset
+
+The dataset is filtered by date and clipped to the defined AOI. The year is extracted and added as metadata.
+
+```js
+var dataset = ee.ImageCollection('MODIS/061/MCD12Q2')
+  .filter(ee.Filter.date('2021-01-01', '2023-12-31'))
+  .map(function(image) {
+    var year = image.date().format('yyyy');
+    return image.set('year', year).clip(aoi);
+  });
+```
+
+### Apply Scaling Factors to Bands
+
+Scaling factors are applied to selected bands to convert them into meaningful units.
+```js
+function applyScaling(image) {
+  var scaledBands = image
+    .select(['EVI_Minimum_1']).multiply(0.0001).rename('EVI_Minimum_1')
+    .addBands(image.select(['EVI_Minimum_2']).multiply(0.0001).rename('EVI_Minimum_2'))
+    .addBands(image.select(['EVI_Amplitude_1']).multiply(0.0001).rename('EVI_Amplitude_1'))
+    .addBands(image.select(['EVI_Amplitude_2']).multiply(0.0001).rename('EVI_Amplitude_2'))
+    .addBands(image.select(['EVI_Area_1']).multiply(0.1).rename('EVI_Area_1'))
+    .addBands(image.select(['EVI_Area_2']).multiply(0.1).rename('EVI_Area_2'));
+    
+  return image.addBands(scaledBands, null, true)
+              .copyProperties(image, image.propertyNames());
+}
+
+dataset = dataset.map(applyScaling);
+
+```
+
+### Convert Bands to Float32
+
+Ensure all bands are consistent in data type for export.
+
+```js
+function convertToFloat(image) {
+  return image.toFloat();
+}
+
+dataset = dataset.map(convertToFloat);
+```
+
+
+## 3. Check Processed Bands
+
+### Visualize Vegetation Peak Band for 2023
+
+Visualize the `Peak_1` band in the map viewer.
+
+```js
+var vegetationPeak = dataset.filter(ee.Filter.date('2023-01-01', '2023-12-31')).select('Peak_1').mosaic();
+
+var vegetationPeakVis = {
+  min: 19364,
+  max: 19582,
+  palette: ['0f17ff', 'b11406', 'f1ff23']
+};
+
+Map.setCenter(-113.0, 55.25, 8);
+Map.addLayer(vegetationPeak, vegetationPeakVis, 'Vegetation Peak 2023');
+```
+
+###  Calculate summary statistics 
+
+Print summary statistics to verify value ranges.
+
+```js
+dataset.filter(ee.Filter.date('2023-01-01', '2023-12-31'))
+  .mosaic().bandNames().evaluate(function(bands) {
+    bands.forEach(function(band) {
+      var stats = dataset.filter(ee.Filter.date('2023-01-01', '2023-12-31')).mosaic().select(band).reduceRegion({
+        reducer: ee.Reducer.minMax(),
+        geometry: aoi,
+        scale: 500,
+        maxPixels: 1e13
+      });
+      stats.evaluate(function(result) {
+        print(band + ' Min and Max (2023):', result);
+      });
+    });
+  });
+```
+
+## 4. Export Time Series to Google Drive
+
+This section shows how to export each annual image as a multiband GeoTIFF to Google Drive.
+
+### Define Export Parameters
+
+```js
+var folder = 'gee_exports';
+var scale = 500;
+var crs = 'EPSG:4326';
+```
+
+### Define File Naming Function
+
+Create custom file names based on the image year.
+
+```js
+var fileNameFn = function(img) {
+  var year = img.date().format('yyyy').getInfo();
+  return 'MODIS_MCD12Q2_' + year;
+};
+```
+
+#### Export Image Collection
+
+```js
+utils.exportImageCollection(dataset, aoi, folder, scale, crs, fileNameFn);
+```
 
