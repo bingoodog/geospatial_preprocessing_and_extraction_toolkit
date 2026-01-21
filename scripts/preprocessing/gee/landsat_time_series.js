@@ -107,7 +107,10 @@ var ls = landsatTimeSeries.ls_fn(
   [
     'BSI', 'DRS', 'DSWI', 'EVI', 'GNDVI', 
     'LAI', 'NBR', 'NDMI', 'NDSI', 'NDVI',
-    'NDWI', 'SAVI', 'SI'
+    'NDWI', 'SAVI', 'SI',
+    // add new indices here
+    'RVI', 'DVI', 'TVI', 'CI', 'BI',
+    'NDBI', 'NSRVI'
   ],
   statistic
 )

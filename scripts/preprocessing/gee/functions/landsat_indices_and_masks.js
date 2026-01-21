@@ -355,6 +355,138 @@ exports.addSI = function(image) {
   return image.addBands([SI]);
 };
 
+/**
+ * Adds Ratio Vegetation Index (RVI) band to an image.
+ * RVI = NIR / Red
+ * @param {Object} image - The image to process.
+ * @returns {Object} The image with the RVI band added.
+ * 
+ * Tucker, C. J. (1979). Red and photographic infrared linear combinations for monitoring vegetation.
+ * Remote Sensing of Environment, 8(2), 127-150.
+ */
+exports.addRVI = function(image) {
+  var RVI = image.expression(
+    'NIR / Red', {
+      'NIR': image.select('SR_B4'),
+      'Red': image.select('SR_B3')
+    }).rename('RVI');
+  // Clamp RVI to reasonable range to handle extreme values
+  var RVI_clamped = RVI.clamp(0, 10);
+  return image.addBands([RVI_clamped]);
+};
+
+/**
+ * Adds Difference Vegetation Index (DVI) band to an image.
+ * DVI = NIR - Red
+ * @param {Object} image - The image to process.
+ * @returns {Object} The image with the DVI band added.
+ * 
+ * Jordan, C. F. (1969). Derivation of leaf area index from quality of light on the forest floor.
+ * Ecology, 50(4), 663-666.
+ */
+exports.addDVI = function(image) {
+  var DVI = image.expression(
+    'NIR - Red', {
+      'NIR': image.select('SR_B4'),
+      'Red': image.select('SR_B3')
+    }).rename('DVI');
+  return image.addBands([DVI]);
+};
+
+/**
+ * Adds Triangle Vegetation Index (TVI) band to an image.
+ * TVI = 0.5 * (120 * (NIR - Green) - 200 * (Red - Green))
+ * @param {Object} image - The image to process.
+ * @returns {Object} The image with the TVI band added.
+ * 
+ * Broge, N. H., & Leblanc, E. (2001). Comparing prediction power and stability of broadband and hyperspectral vegetation indices
+ * for estimation of green leaf area index and canopy chlorophyll density.
+ * Remote Sensing of Environment, 76(2), 156-172.
+ */
+exports.addTVI = function(image) {
+  var TVI = image.expression(
+    '0.5 * (120 * (NIR - Green) - 200 * (Red - Green))', {
+      'NIR': image.select('SR_B4'),
+      'Red': image.select('SR_B3'),
+      'Green': image.select('SR_B2')
+    }).rename('TVI');
+  return image.addBands([TVI]);
+};
+
+/**
+ * Adds Clay Index (CI) band to an image.
+ * CI = SWIR1 / SWIR2
+ * 
+ * Reference:
+ * Modified Clay Mineral Index based on SWIR absorption features
+ */
+
+exports.addCI = function(image) {
+  var CI = image.expression(
+    'SWIR1 / SWIR2', {
+      'SWIR1': image.select('SR_B5'),
+      'SWIR2': image.select('SR_B7')
+    }).rename('CI');
+
+  return image.addBands(CI);
+};
+
+
+/**
+ * Adds Brightness Index (BI) band to an image.
+ * BI = sqrt((Red^2 + NIR^2) / 2)
+ * @param {Object} image - The image to process.
+ * @returns {Object} The image with the BI band added.
+ * 
+ * Lillesand, T. M., Kiefer, R. W., & Chipman, J. W. (2004). Remote sensing and image interpretation.
+ * John Wiley & Sons.
+ */
+exports.addBI = function(image) {
+  var BI = image.expression(
+    'sqrt((pow(Red,2) + pow(NIR,2)) / 2)', {
+      'Red': image.select('SR_B3'),
+      'NIR': image.select('SR_B4')
+  }).rename('BI');
+  return image.addBands([BI]);
+};
+
+/**
+ * Adds Normalized Difference Built-up Index (NDBI) band to an image.
+ * NDBI = (SWIR - NIR) / (SWIR + NIR)
+ * @param {Object} image - The image to process.
+ * @returns {Object} The image with the NDBI band added.
+ * 
+ * Zha, Y., Gao, J., & Ni, S. (2003). Use of normalized difference built-up index in automatically mapping urban areas from TM imagery.
+ * International Journal of Remote Sensing, 24(3), 583-594.
+ */
+exports.addNDBI = function(image) {
+  var NDBI = image.expression(
+    '(SWIR - NIR) / (SWIR + NIR)', {
+      'NIR': image.select('SR_B4'),
+      'SWIR': image.select('SR_B5')
+    }).rename('NDBI');
+  return image.addBands([NDBI]);
+};
+
+/**
+ * Adds Normalized Difference Red Edge Index (NSRVI) band to an image.
+ * NSRVI = NIR/ SWIR1
+ * @param {Object} image - The image to process.
+ * @returns {Object} The image with the NSRVI band added.
+ * 
+ * Huete, A. R. (1988). A soil-adjusted vegetation index (SAVI).
+ * Remote Sensing of Environment, 25(3), 295-309.
+ */
+exports.addNSRVI = function(image) {
+  var NSRVI = image.expression(
+    'NIR / SWIR1', {
+      'NIR': image.select('SR_B4'),
+      'SWIR1': image.select('SR_B5')
+    }).rename('NSRVI');
+  return image.addBands([NSRVI]);
+};
+
+
 // Define Landsat masks functions
 
 /**

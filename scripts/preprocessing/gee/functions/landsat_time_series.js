@@ -219,6 +219,27 @@ exports.ls_fn = function(dates, interval, intervalType, aoi, selectedIndices, st
         case 'SI':
           combinedCollection = combinedCollection.map(landsat.addSI);
           break;
+        case 'RVI':
+          combinedCollection = combinedCollection.map(landsat.addRVI);
+          break;
+        case 'DVI':
+          combinedCollection = combinedCollection.map(landsat.addDVI);
+          break;
+        case 'TVI':
+          combinedCollection = combinedCollection.map(landsat.addTVI);
+          break;
+        case 'CI':
+          combinedCollection = combinedCollection.map(landsat.addCI);
+          break;
+        case 'BI':
+          combinedCollection = combinedCollection.map(landsat.addBI);
+          break;
+        case 'NDBI':
+          combinedCollection = combinedCollection.map(landsat.addNDBI);
+          break;
+        case 'NSRVI':
+          combinedCollection = combinedCollection.map(landsat.addNSRVI);
+          break;
         // Additional indices can be added here
       }
     });
@@ -296,7 +317,7 @@ exports.ls_fn = function(dates, interval, intervalType, aoi, selectedIndices, st
 // var statistic = 'mean'; // Choose 'mean', 'median', 'max', etc.
 
 // // Define which indices to calculate
-// // Available Indices: BSI, DRS, DSWI, EVI, LAI, NDMI, NDVI, SAVI, SI
+// Available Indices: BSI, DRS, DSWI, EVI, GNDVI, LAI, NBR, NDMI, NDSI, NDVI, NDWI, SAVI, SI, RVI, DVI, TVI, CI, BI, RI, NDBI, LSWI, NSRVI, NDBal, VID
 // var selectedIndices = ['NDVI'];
 
 // // Call s2_fn with specified parameters
